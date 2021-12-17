@@ -401,7 +401,7 @@ function OnekeyUpate($GitSource = 'Github', $auth = 'qkqpttgf', $project = 'OneM
     $tarfile = $tmppath . '/github.tar.gz';
     file_put_contents($tarfile, file_get_contents($url));
     $phar = new PharData($tarfile);
-    $html = $phar->extractTo($outPath, null, true);//路径 要解压的文件 是否覆盖
+    $html = $phar->extractTo($tmppath, null, true);//路径 要解压的文件 是否覆盖
     unlink($tarfile);
 
     // 获取解压出的目录名

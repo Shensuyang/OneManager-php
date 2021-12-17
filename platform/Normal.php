@@ -341,7 +341,7 @@ function OnekeyUpate($GitSource = 'Github', $auth = 'qkqpttgf', $project = 'OneM
     unlink($tarfile);
 
     $outPath = '';
-    $outPath = findIndexPath($slash, $outPath);
+    $outPath = findIndexPath($slash, $projectPath);
     //error_log1($outPath);
     if ($outPath=='') return 0;
 

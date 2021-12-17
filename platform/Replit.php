@@ -102,7 +102,7 @@ function setConfig($arr, $disktag = '')
 {
     if (!($envs = getcache('REPLIT_CONFIG'))) {
         $envs = json_decode(curl('GET', getenv('REPLIT_DB_URL') . '/REPLIT_CONFIG')['body'], true);
-        //savecache('REPLIT_CONFIG', $envs);
+        savecache('REPLIT_CONFIG', $envs);
     }
     if ($disktag=='') $disktag = $_SERVER['disktag'];
     $disktags = explode("|", getConfig('disktag'));
@@ -310,15 +310,19 @@ function setConfigResponse($response)
     //return json_decode($response, true);
 }
 
-function OnekeyUpate($auth = 'qkqpttgf', $project = 'OneManager-php', $branch = 'master')
+function OnekeyUpate($GitSource = 'Github', $auth = 'qkqpttgf', $project = 'OneManager-php', $branch = 'master')
 {
     $slash = '/';
     if (strpos(__DIR__, ':')) $slash = '\\';
     // __DIR__ is xxx/platform
     $projectPath = splitlast(__DIR__, $slash)[0];
 
-    // 从github下载对应tar.gz，并解压
-    $url = 'https://github.com/' . $auth . '/' . $project . '/tarball/' . urlencode($branch) . '/';
+    if ($GitSource=='Github') {
+        // 从github下载对应tar.gz，并解压
+        $url = 'https://github.com/' . $auth . '/' . $project . '/tarball/' . urlencode($branch) . '/';
+    } elseif ($GitSource=='HITGitlab') {
+        $url = 'https://git.hit.edu.cn/' . $auth . '/' . $project . '/-/archive/' . urlencode($branch) . '/' . $project . '-' . urlencode($branch) . '.tar.gz';
+    } else return ['stat'=>500, 'body'=>'Git Source input Error!'];
     $tarfile = $projectPath . $slash .'github.tar.gz';
     $githubfile = file_get_contents($url);
     if (!$githubfile) return ['stat'=>500, 'body'=>'download error from github.'];
@@ -334,14 +338,7 @@ function OnekeyUpate($auth = 'qkqpttgf', $project = 'OneManager-php', $branch = 
     unlink($tarfile);
 
     $outPath = '';
-    $tmp = scandir($projectPath);
-    $name = $auth . '-' . $project;
-    foreach ($tmp as $f) {
-        if ( substr($f, 0, strlen($name)) == $name) {
-            $outPath = $projectPath . $slash . $f;
-            break;
-        }
-    }
+    $outPath = findIndexPath($projectPath);
     //error_log1($outPath);
     if ($outPath=='') return ['stat'=>500, 'body'=>'can\'t find folder after download from github.'];
 
@@ -376,6 +373,26 @@ function moveFolder($from, $to, $slash)
     closedir($handler);
     rmdir($from);
     return ['stat'=>200, 'body'=>'success.'];
+}
+
+function findIndexPath($rootpath, $path = '')
+{// find the path of first 'index.php'
+    if (substr($rootpath,-1)=='/') $rootpath = substr($rootpath, 0, -1);
+    if (substr($path,0,1)=='/') $path = substr($path, 1);
+    $handler=opendir(path_format($rootpath.'/'.$path)); //打开当前文件夹
+    while($filename=readdir($handler)){
+        if($filename != "." && $filename != ".."){//文件夹文件名字为'.'和‘..’，不要对他们进行操作
+            $nowname = path_format($rootpath.'/'.$path."/".$filename);
+            if(is_dir($nowname)){// 如果读取的某个对象是文件夹，则递归
+                $res = findIndexPath($rootpath, $path."/".$filename);
+                if ($res!=='') return $res;
+            }else{
+                if ($filename==='index.php') return $rootpath.'/'.$path;
+            }
+        }
+    }
+    @closedir($path);
+    return '';
 }
 
 function WaitFunction() {

@@ -628,7 +628,7 @@ function findIndexPath($rootpath, $path = '')
             }
         }
     }
-    @closedir($path);
+    @closedir($handler);
     return '';
 }
 

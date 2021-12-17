@@ -440,15 +440,18 @@ function OnekeyUpate($GitSource = 'Github', $auth = 'qkqpttgf', $project = 'OneM
     // 获取解压出的目录名
     $tmp = scandir($outPath);
     $name = $auth.'-'.$project;
+    $tmp1 = '_';
     foreach ($tmp as $f) {
+$tmp1 .= "<br>" . $f;
         if ( substr($f, 0, strlen($name)) == $name) {
             $outPath .= $f;
             break;
         }
     }
-return json_encode(['ErrorMessage'=>$outPath]);
+    $tmp1.= '_';
+    return json_encode(['ErrorMessage'=>$outPath . $tmp1]);
     // 将目录中文件打包成zip
-    $zip=new ZipArchive();
+    $zip = new ZipArchive();
     if($zip->open($source, ZipArchive::CREATE)){
         addFileToZip($zip, $outPath); //调用方法，对要打包的根目录进行操作，并将ZipArchive的对象传递给方法
         $zip->close(); //关闭处理的zip文件

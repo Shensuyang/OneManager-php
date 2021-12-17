@@ -434,22 +434,19 @@ function OnekeyUpate($auth = 'qkqpttgf', $project = 'OneManager-php', $branch = 
     $source = '/tmp/code.zip';
     $outPath = '/tmp/';
 
-    // 从github下载对应tar.gz，并解压
-    $url = 'https://github.com/' . $auth . '/' . $project . '/tarball/' . urlencode($branch) . '/';
+    if ($GitSource=='Github') {
+        // 从github下载对应tar.gz，并解压
+        $url = 'https://github.com/' . $auth . '/' . $project . '/tarball/' . urlencode($branch) . '/';
+    } elseif ($GitSource=='HITGitlab') {
+        $url = 'https://git.hit.edu.cn/' . $auth . '/' . $project . '/-/archive/' . urlencode($branch) . '/' . $project . '-' . urlencode($branch) . '.tar.gz';
+    } else return json_encode(['error_code'=>'Error', 'error_msg'=>'Git Source input Error!']);
     $tarfile = '/tmp/github.tar.gz';
     file_put_contents($tarfile, file_get_contents($url));
     $phar = new PharData($tarfile);
     $html = $phar->extractTo($outPath, null, true);//路径 要解压的文件 是否覆盖
 
     // 获取解压出的目录名
-    $tmp = scandir($outPath);
-    $name = $auth.'-'.$project;
-    foreach ($tmp as $f) {
-        if ( substr($f, 0, strlen($name)) == $name) {
-            $outPath .= $f;
-            break;
-        }
-    }
+    $outPath = findIndexPath($outPath);
 
     // 将目录中文件打包成zip
     //$zip=new ZipArchive();
@@ -482,6 +479,26 @@ function addFileToZip($zip, $rootpath, $path = '')
         }
     }
     @closedir($path);
+}
+
+function findIndexPath($rootpath, $path = '')
+{// find the path of first 'index.php'
+    if (substr($rootpath,-1)=='/') $rootpath = substr($rootpath, 0, -1);
+    if (substr($path,0,1)=='/') $path = substr($path, 1);
+    $handler=opendir(path_format($rootpath.'/'.$path)); //打开当前文件夹
+    while($filename=readdir($handler)){
+        if($filename != "." && $filename != ".."){//文件夹文件名字为'.'和‘..’，不要对他们进行操作
+            $nowname = path_format($rootpath.'/'.$path."/".$filename);
+            if(is_dir($nowname)){// 如果读取的某个对象是文件夹，则递归
+                $res = findIndexPath($rootpath, $path."/".$filename);
+                if ($res!=='') return $res;
+            }else{
+                if ($filename==='index.php') return $rootpath.'/'.$path;
+            }
+        }
+    }
+    @closedir($path);
+    return '';
 }
 
 function WaitFunction() {

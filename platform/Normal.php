@@ -312,19 +312,24 @@ function setConfigResponse($response)
     return json_decode($response, true);
 }
 
-function OnekeyUpate($auth = 'qkqpttgf', $project = 'OneManager-php', $branch = 'master')
+function OnekeyUpate($GitSource = 'Github', $auth = 'qkqpttgf', $project = 'OneManager-php', $branch = 'master')
 {
     $slash = '/';
     if (strpos(__DIR__, ':')) $slash = '\\';
     // __DIR__ is xxx/platform
     $projectPath = splitlast(__DIR__, $slash)[0];
 
-    // 从github下载对应tar.gz，并解压
-    $url = 'https://github.com/' . $auth . '/' . $project . '/tarball/' . urlencode($branch) . '/';
+    if ($GitSource=='Github') {
+        // 从github下载对应tar.gz，并解压
+        $url = 'https://github.com/' . $auth . '/' . $project . '/tarball/' . urlencode($branch) . '/';
+    } elseif ($GitSource=='HITGitlab') {
+        $url = 'https://git.hit.edu.cn/' . $auth . '/' . $project . '/-/archive/' . urlencode($branch) . '/' . $project . '-' . urlencode($branch) . '.tar.gz';
+    } else return 0;
     $tarfile = $projectPath . $slash .'github.tar.gz';
     $githubfile = file_get_contents($url);
     if (!$githubfile) return 0;
     file_put_contents($tarfile, $githubfile);
+
     if (splitfirst(PHP_VERSION, '.')[0] > '5') {
         $phar = new PharData($tarfile); // need php5.3, 7, 8
         $phar->extractTo($projectPath, null, true);//路径 要解压的文件 是否覆盖
@@ -336,14 +341,7 @@ function OnekeyUpate($auth = 'qkqpttgf', $project = 'OneManager-php', $branch = 
     unlink($tarfile);
 
     $outPath = '';
-    $tmp = scandir($projectPath);
-    $name = $auth . '-' . $project;
-    foreach ($tmp as $f) {
-        if ( substr($f, 0, strlen($name)) == $name) {
-            $outPath = $projectPath . $slash . $f;
-            break;
-        }
-    }
+    $outPath = findIndexPath($slash, $outPath);
     //error_log1($outPath);
     if ($outPath=='') return 0;
 
@@ -385,6 +383,26 @@ function moveFolder($from, $to, $slash)
     closedir($handler);
     rmdir($from);
     return json_encode( [ 'response' => 'success' ] );
+}
+
+function findIndexPath($slash, $rootpath, $path = '')
+{// find the path of first 'index.php'
+    if (substr($rootpath,-1)==$slash) $rootpath = substr($rootpath, 0, -1);
+    if (substr($path,0,1)==$slash) $path = substr($path, 1);
+    $handler=opendir(path_format($rootpath.$slash.$path)); //打开当前文件夹
+    while($filename=readdir($handler)){
+        if($filename != "." && $filename != ".."){//文件夹文件名字为'.'和‘..’，不要对他们进行操作
+            $nowname = path_format($rootpath.$slash.$path.$slash.$filename);
+            if(is_dir($nowname)){// 如果读取的某个对象是文件夹，则递归
+                $res = findIndexPath($slash, $rootpath, $path.$slash.$filename);
+                if ($res!=='') return $res;
+            }else{
+                if ($filename==='index.php') return $rootpath.$slash.$path;
+            }
+        }
+    }
+    @closedir($path);
+    return '';
 }
 
 function WaitFunction() {

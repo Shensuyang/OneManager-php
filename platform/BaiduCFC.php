@@ -388,7 +388,7 @@ function OnekeyUpate($GitSource = 'Github', $auth = 'qkqpttgf', $project = 'OneM
         $url = 'https://github.com/' . $auth . '/' . $project . '/tarball/' . urlencode($branch) . '/';
     } elseif ($GitSource=='HITGitlab') {
         $url = 'https://git.hit.edu.cn/' . $auth . '/' . $project . '/-/archive/' . urlencode($branch) . '/' . $project . '-' . urlencode($branch) . '.tar.gz';
-    } else return json_encode(['ErrorMessage'=>'Git Source input Error!']);
+    } else return json_encode(['FunctionBrn'=>$_SERVER['functionBrn'], 'code'=>'Git Source input Error!']);
     $tarfile = '/tmp/github.tar.gz';
     file_put_contents($tarfile, file_get_contents($url));
     $phar = new PharData($tarfile);

@@ -375,7 +375,7 @@ function setConfigResponse($response)
     return json_decode($response, true);
 }
 
-function OnekeyUpate($auth = 'qkqpttgf', $project = 'OneManager-php', $branch = 'master')
+function OnekeyUpate($GitSource = 'Github', $auth = 'qkqpttgf', $project = 'OneManager-php', $branch = 'master')
 {
     $tmppath = '/tmp';
 
@@ -385,6 +385,7 @@ function OnekeyUpate($auth = 'qkqpttgf', $project = 'OneManager-php', $branch = 
     } elseif ($GitSource=='HITGitlab') {
         $url = 'https://git.hit.edu.cn/' . $auth . '/' . $project . '/-/archive/' . urlencode($branch) . '/' . $project . '-' . urlencode($branch) . '.tar.gz';
     } else return json_encode(['error'=>['code'=>'Git Source input Error!']]);
+
     $tarfile = $tmppath . '/github.tar.gz';
     file_put_contents($tarfile, file_get_contents($url));
     $phar = new PharData($tarfile);
@@ -393,6 +394,7 @@ function OnekeyUpate($auth = 'qkqpttgf', $project = 'OneManager-php', $branch = 
 
     // 获取解压出的目录名
     $outPath = findIndexPath($tmppath);
+
     if ($outPath=='') return '{"error":{"message":"no outpath"}}';
     $name = $project . 'CODE';
     mkdir($tmppath . "/" . $name, 0777, 1);
@@ -416,11 +418,11 @@ function findIndexPath($rootpath, $path = '')
                 $res = findIndexPath($rootpath, $path."/".$filename);
                 if ($res!=='') return $res;
             }else{
-                if ($filename==='index.php') return $rootpath.'/'.$path;
+                if ($filename=='index.php') return $rootpath.'/'.$path;
             }
         }
     }
-    @closedir($path);
+    @closedir($handler);
     return '';
 }
 

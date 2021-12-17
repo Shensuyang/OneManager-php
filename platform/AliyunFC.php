@@ -438,7 +438,7 @@ function OnekeyUpate($GitSource = 'Github', $auth = 'qkqpttgf', $project = 'OneM
     $html = $phar->extractTo($outPath, null, true);//路径 要解压的文件 是否覆盖
 
     // 获取解压出的目录名
-    $tmp = scandir($outPath);
+    /*$tmp = scandir($outPath);
     $name = $auth.'-'.$project;
     $tmp1 = '_';
     foreach ($tmp as $f) {
@@ -449,7 +449,8 @@ $tmp1 .= "<br>" . $f;
         }
     }
     $tmp1.= '_';
-    return json_encode(['ErrorMessage'=>$outPath . $tmp1]);
+    return json_encode(['ErrorMessage'=>$outPath . $tmp1]);*/
+    $outPath = findIndexPath($outPath);
     // 将目录中文件打包成zip
     $zip = new ZipArchive();
     if($zip->open($source, ZipArchive::CREATE)){
@@ -479,6 +480,26 @@ function addFileToZip($zip, $rootpath, $path = '')
         }
     }
     @closedir($path);
+}
+
+function findIndexPath($rootpath, $path = '')
+{
+    if (substr($rootpath,-1)=='/') $rootpath = substr($rootpath, 0, -1);
+    if (substr($path,0,1)=='/') $path = substr($path, 1);
+    $handler=opendir(path_format($rootpath.'/'.$path)); //打开当前文件夹由$path指定。
+    while($filename=readdir($handler)){
+        if($filename != "." && $filename != ".."){//文件夹文件名字为'.'和‘..’，不要对他们进行操作
+            $nowname = path_format($rootpath.'/'.$path."/".$filename);
+            if(is_dir($nowname)){// 如果读取的某个对象是文件夹，则递归
+                $res = findIndexPath($rootpath, $path."/".$filename);
+                if ($res!=='') return $res;
+            }else{
+                if ($filename==='index.php') return $rootpath.'/'.$path;
+            }
+        }
+    }
+    @closedir($path);
+    return '';
 }
 
 function myErrorHandler($errno, $errstr, $errfile, $errline) {

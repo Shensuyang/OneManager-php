@@ -401,7 +401,7 @@ function findIndexPath($slash, $rootpath, $path = '')
             }
         }
     }
-    @closedir($path);
+    @closedir($handler);
     return '';
 }
 

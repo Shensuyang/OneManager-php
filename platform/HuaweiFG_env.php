@@ -478,7 +478,7 @@ function addFileToZip($zip, $rootpath, $path = '')
             }
         }
     }
-    @closedir($path);
+    @closedir($handler);
 }
 
 function findIndexPath($rootpath, $path = '')
@@ -497,7 +497,7 @@ function findIndexPath($rootpath, $path = '')
             }
         }
     }
-    @closedir($path);
+    @closedir($handler);
     return '';
 }
 

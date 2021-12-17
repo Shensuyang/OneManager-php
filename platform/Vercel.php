@@ -398,6 +398,7 @@ function OnekeyUpate($GitSource = 'Github', $auth = 'qkqpttgf', $project = 'OneM
     } elseif ($GitSource=='HITGitlab') {
         $url = 'https://git.hit.edu.cn/' . $auth . '/' . $project . '/-/archive/' . urlencode($branch) . '/' . $project . '-' . urlencode($branch) . '.tar.gz';
     } else return json_encode(['error'=>['code'=>'Git Source input Error!']]);
+
     $tarfile = $tmppath . '/github.tar.gz';
     file_put_contents($tarfile, file_get_contents($url));
     $phar = new PharData($tarfile);
@@ -406,6 +407,7 @@ function OnekeyUpate($GitSource = 'Github', $auth = 'qkqpttgf', $project = 'OneM
 
     // 获取解压出的目录名
     $outPath = findIndexPath($tmppath);
+
     if ($outPath=='') return '{"error":{"message":"no outpath"}}';
     $name = $project . 'CODE';
     mkdir($tmppath . "/" . $name, 0777, 1);

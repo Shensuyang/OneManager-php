@@ -446,7 +446,7 @@ function OnekeyUpate($GitSource = 'Github', $auth = 'qkqpttgf', $project = 'OneM
             break;
         }
     }
-
+return json_encode(['ErrorMessage'=>$outPath]);
     // 将目录中文件打包成zip
     $zip=new ZipArchive();
     if($zip->open($source, ZipArchive::CREATE)){

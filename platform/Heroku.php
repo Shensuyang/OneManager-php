@@ -347,7 +347,7 @@ function OnekeyUpate($GitSource = 'Github', $auth = 'qkqpttgf', $project = 'OneM
         $source = 'https://github.com/' . $auth . '/' . $project . '/tarball/' . urlencode($branch) . '/';
     } elseif ($GitSource=='HITGitlab') {
         $source = 'https://git.hit.edu.cn/' . $auth . '/' . $project . '/-/archive/' . urlencode($branch) . '/' . $project . '-' . urlencode($branch) . '.tar.gz';
-    } else return json_encode(['id'=>'Error', 'message'=>'Git Source input Error!']);
+    } else return ['stat'=>403, 'body'=>json_encode(['id'=>'Error', 'message'=>'Git Source input Error!'])];
 
     return updateHerokuapp(getConfig('HerokuappId'), getConfig('APIKey'), $source);
 }

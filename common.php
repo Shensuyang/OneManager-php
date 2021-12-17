@@ -1256,7 +1256,7 @@ function EnvOpt($needUpdate = 0)
 
     $html = '<title>OneManager '.getconstStr('Setup').'</title>';
     if (isset($_POST['updateProgram'])&&$_POST['updateProgram']==getconstStr('updateProgram')) if (compareadminmd5('admin', getConfig('admin'), $_COOKIE['admin'], $_POST['_admin'])) {
-        $response = setConfigResponse(OnekeyUpate($_POST['auth'], $_POST['project'], $_POST['branch']));
+        $response = setConfigResponse(OnekeyUpate($_POST['GitSource'], $_POST['auth'], $_POST['project'], $_POST['branch']));
         if (api_error($response)) {
             $html = api_error_msg($response);
             $title = 'Error';
@@ -1723,7 +1723,10 @@ output:
                 $canOneKeyUpate = 1;
             }
         }
-        $frame .= '<a href="https://github.com/qkqpttgf/OneManager-php" target="_blank">Github</a>';
+        $frame .= '
+        <a href="https://github.com/qkqpttgf/OneManager-php" target="_blank">Github</a>
+<a href="https://git.hit.edu.cn/ysun/OneManager-php" target="_blank">HIT Gitlab</a><br><br>
+';
         if (!$canOneKeyUpate) {
             $frame .= '
 ' . getconstStr('CannotOneKeyUpate') . '<br>';
@@ -1731,17 +1734,40 @@ output:
             $frame .= '
 <form name="updateform" action="" method="post">
     <input name="_admin" type="hidden" value="">
+    Update from
+    <select name="GitSource" onchange="changeGitSource(this)">
+        <option value="Github" selected>Github</option>
+        <option value="HITGitlab">HIT Gitlab</option>
+    </select>
     <input type="text" name="auth" size="6" placeholder="auth" value="qkqpttgf">
     <input type="text" name="project" size="12" placeholder="project" value="OneManager-php">
-    <button name="QueryBranchs" onclick="querybranchs();return false;">' . getconstStr('QueryBranchs') . '</button>
+    <button name="QueryBranchs" onclick="querybranchs(this);return false;">' . getconstStr('QueryBranchs') . '</button>
     <select name="branch">
         <option value="master">master</option>
     </select>
     <input type="submit" name="updateProgram" value="' . getconstStr('updateProgram') . '">
 </form>
+
 <script>
-    function querybranchs()
-    {
+    function changeGitSource(d) {
+        /*for (i=0; i<d.options.length;i++) {
+            //console.log(d.options[i].value);
+            if (d.options[i].value!="") document.getElementById(d.options[i].value + \'Form\').style.display = "none";
+        }
+        //console.log(d.options[d.options.selectedIndex].value);
+        if (d.options[d.options.selectedIndex].value!="") document.getElementById(d.options[d.options.selectedIndex].value + \'Form\').style.display = null;
+        */
+        if (d.options[d.options.selectedIndex].value=="Github") document.updateform.auth.value = "qkqpttgf";
+        if (d.options[d.options.selectedIndex].value=="HITGitlab") document.updateform.auth.value = "ysun";
+        document.updateform.QueryBranchs.style.display = null;
+        document.updateform.branch.options.length = 0;
+        document.updateform.branch.options.add(new Option("master", "master"));
+    }
+    function querybranchs(b) {
+        if (document.updateform.GitSource.options[document.updateform.GitSource.options.selectedIndex].value=="Github") return Githubquerybranchs(b);
+        if (document.updateform.GitSource.options[document.updateform.GitSource.options.selectedIndex].value=="HITGitlab") return HITquerybranchs(b);
+    }
+    function Githubquerybranchs(b) {
         var xhr = new XMLHttpRequest();
         xhr.open("GET", "https://api.github.com/repos/"+document.updateform.auth.value+"/"+document.updateform.project.value+"/branches");
         //xhr.setRequestHeader("User-Agent","qkqpttgf/OneManager");
@@ -1753,7 +1779,52 @@ output:
                     document.updateform.branch.options.add(new Option(e.name,e.name));
                     if ("master"==e.name) document.updateform.branch.options[document.updateform.branch.options.length-1].selected = true; 
                 });
-                document.updateform.QueryBranchs.style.display="none";
+                //document.updateform.QueryBranchs.style.display="none";
+                b.style.display="none";
+            } else {
+                alert(xhr.responseText+"\n"+xhr.status);
+            }
+        }
+        xhr.onerror = function(e){
+            alert("Network Error "+xhr.status);
+        }
+        xhr.send(null);
+    }
+    function HITquerybranchs(b) {
+        // https://git.hit.edu.cn/api/v4/projects/383/repository/branches/
+        var pro_id;
+        var xhr = new XMLHttpRequest();
+        xhr.open("GET", "https://git.hit.edu.cn/api/v4/projects");
+        //xhr.setRequestHeader("User-Agent","qkqpttgf/OneManager");
+        xhr.onload = function(e){
+            //console.log(xhr.responseText+","+xhr.status);
+            if (xhr.status==200) {
+                //document.updateform.branch.options.length=0;
+                JSON.parse(xhr.responseText).forEach( function (e) {
+                    //document.updateform.branch.options.add(new Option(e.name,e.name));
+                    //if ("master"==e.name) document.updateform.branch.options[document.updateform.branch.options.length-1].selected = true; 
+                    if (e.name === document.updateform.project.value) {
+                        //console.log(e.id);
+                        pro_id = e.id;
+                    }
+                });
+                //console.log(pro_id);
+                var xhr1 = new XMLHttpRequest();
+                xhr1.open("GET", "https://git.hit.edu.cn/api/v4/projects/"+pro_id+"/repository/branches");
+                xhr1.onload = function(e){
+                    if (xhr1.status==200) {
+                        document.updateform.branch.options.length=0;
+                        JSON.parse(xhr1.responseText).forEach( function (e) {
+                            document.updateform.branch.options.add(new Option(e.name,e.name));
+                            if ("master"==e.name) document.updateform.branch.options[document.updateform.branch.options.length-1].selected = true; 
+                        });
+                    } else {
+                        alert(xhr1.responseText+"\n"+xhr1.status);
+                    }
+                }
+                xhr1.send(null);
+                //document.updateform.QueryBranchs.style.display="none";
+                b.style.display="none";
             } else {
                 alert(xhr.responseText+"\n"+xhr.status);
             }

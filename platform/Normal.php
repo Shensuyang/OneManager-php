@@ -397,7 +397,7 @@ function findIndexPath($slash, $rootpath, $path = '')
                 $res = findIndexPath($slash, $rootpath, $path.$slash.$filename);
                 if ($res!=='') return $res;
             }else{
-                if ($filename==='index.php') return $rootpath.$slash.$path;
+                if ($filename==='index.php') if ($path!='') return $rootpath.$slash.$path;
             }
         }
     }

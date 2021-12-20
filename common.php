@@ -1803,7 +1803,7 @@ output:
                 JSON.parse(xhr.responseText).forEach( function (e) {
                     //document.updateform.branch.options.add(new Option(e.name,e.name));
                     //if ("master"==e.name) document.updateform.branch.options[document.updateform.branch.options.length-1].selected = true; 
-                    if (e.name === document.updateform.project.value) {
+                    if (e.name===document.updateform.project.value && e.namespace.path===document.updateform.auth.value) {
                         //console.log(e.id);
                         pro_id = e.id;
                     }
